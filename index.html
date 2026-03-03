@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>致锦文</title>
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, #ff7eb3, #ff65a3, #ff9ec0);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .transition-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            max-height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .envelope-container {
+            position: absolute;
+            width: 300px;
+            height: 200px;
+            perspective: 1000px;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.8s, opacity 0.8s;
+        }
+        
+        .envelope-container.opening {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        
+        .envelope {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+        }
+        
+        .envelope.open {
+            transform: rotateX(180deg);
+        }
+        
+        .envelope-front, .envelope-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .envelope-front {
+            background: linear-gradient(135deg, #ff9ec0, #ff7eb3);
+            color: white;
+            z-index: 2;
+        }
+        
+        .envelope-back {
+            background: linear-gradient(135deg, #ff7eb3, #ff65a3);
+            color: white;
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+        
+        .envelope-content {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .envelope-front::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-bottom: 100px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .envelope-text {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .letter-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: transform 0.6s 0.4s, opacity 0.6s 0.4s;
+            z-index: 5;
+        }
+        
+        .letter-container.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .pages-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            overflow: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: transform 0.6s ease, opacity 0.6s ease;
+        }
+        
+        .page.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .page.next {
+            opacity: 1;
+            transform: translateX(100%);
+        }
+        
+        .page.prev {
+            opacity: 1;
+            transform: translateX(-100%);
+        }
+        
+        .page-content {
+            text-align: center;
+            max-width: 90%;
+        }
+        
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            color: #ff65a3;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1 .icon-after {
+            display: inline-block;
+            margin-left: 15px;
+            font-size: 1.2em;
+            animation: iconFloat 2s infinite ease-in-out;
+        }
+        
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #ff65a3, transparent);
+        }
+        
+        p {
+            font-size: 1.3em;
+            line-height: 1.8;
+            margin: 12px 0;
+            color: #555;
+            max-width: 600px;
+            position: relative;
+            padding: 0 10px;
+        }
+        
+        .heart {
+            font-size: 45px;
+            margin: 20px 0;
+            animation: beat 1s infinite;
+            color: #ff65a3;
+        }
+        
+        @keyframes beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        
+        .delay-1 {
+            animation-delay: 0.2s;
+        }
+        
+        .delay-2 {
+            animation-delay: 0.4s;
+        }
+        
+        .delay-3 {
+            animation-delay: 0.6s;
+        }
+        
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            color: #ff65a3;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.8em;
+            transition: all 0.3s;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 101, 163, 0.9);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .prev-btn {
+            left: 20px;
+        }
+        
+        .next-btn {
+            right: 20px;
+        }
+        
+        .page-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #ff65a3;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #fff;
+            opacity: 0.8;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        
+        .floating-hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .floating-heart {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.7;
+            animation: float 6s linear infinite;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+            animation: sparkle 1.5s infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .glow-border {
+            position: relative;
+        }
+        
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #ff9ec0, #ff65a3, #ff7eb3, #ff9ec0);
+            border-radius: 25px;
+            z-index: -1;
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { filter: blur(5px) brightness(1); }
+            100% { filter: blur(10px) brightness(1.2); }
+        }
+        
+        .text-glow {
+            text-shadow: 
+                0 0 5px rgba(255, 101, 163, 0.5),
+                0 0 10px rgba(255, 101, 163, 0.3),
+                0 0 15px rgba(255, 101, 163, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-hearts" id="floatingHearts"></div>
+    
+    <div class="transition-container">
+        <!-- 信封区域 -->
+        <div class="envelope-container" id="envelopeContainer">
+            <div class="envelope" id="envelope">
+                <div class="envelope-front">
+                    <div class="envelope-content">
+                        <div class="heart"><i class="fas fa-envelope"></i></div>
+                        <div class="envelope-text">点我打开</div>
+                    </div>
+                </div>
+                <div class="envelope-back">
+                    <div class="envelope-content">
+                        <div class="heart"><i class="fas fa-heart"></i></div>
+                        <div class="envelope-text">给你的信</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 表白内容区域 -->
+        <div class="letter-container" id="letterContainer">
+            <div class="pages-container glow-border" id="pagesContainer">
+                <!-- 第一页 -->
+                <div class="page active" data-page="0">
+                    <div class="page-indicator">第 1 页</div>
+                    <div class="page-content">
+                        <div class="heart fade-in-up"><i class="fas fa-heart"></i></div>
+                        <h1 class="fade-in-up delay-1">初遇的奇迹 <span class="icon-after"><i class="fas fa-star"></i></span></h1>
+                        <p class="fade-in-up delay-2">从遇见你的那一刻起，我的世界就变得不一样了。</p>
+                        <p class="fade-in-up delay-3">你的笑容像阳光一样温暖，你的声音像春风一样温柔。</p>
+                        <p class="fade-in-up delay-3">每一天，我都期待着能见到你，能和你说话，能分享你的喜怒哀乐。</p>
+                    </div>
+                </div>
+                
+                <!-- 第二页 -->
+                <div class="page" data-page="1">
+                    <div class="page-indicator">第 2 页</div>
+                    <div class="page-content">
+                        <div class="heart fade-in-up"><i class="fas fa-heartbeat"></i></div>
+                        <h1 class="fade-in-up delay-1">心动的瞬间 <span class="icon-after"><i class="fas fa-smile"></i></span></h1>
+                        <p class="fade-in-up delay-2">和你在一起的每一刻，都让我感到无比幸福。</p>
+                        <p class="fade-in-up delay-3">你的每一个表情，每一个动作，都深深印在我的心里。</p>
+                        <p class="fade-in-up delay-3">我想把世界上最好的都给你，让你永远快乐。</p>
+                    </div>
+                </div>
+                
+                <!-- 第三页 -->
+                <div class="page" data-page="2">
+                    <div class="page-indicator">第 3 页</div>
+                    <div class="page-content">
+                        <div class="heart fade-in-up"><i class="fas fa-heart-pulse"></i></div>
+                        <h1 class="fade-in-up delay-1">深深的眷恋 <span class="icon-after"><i class="fas fa-moon"></i></span></h1>
+                        <p class="fade-in-up delay-2">时间过得很快，但对你的思念却越来越深。</p>
+                        <p class="fade-in-up delay-3">每一个夜晚，我都在想你，想着我们一起度过的美好时光。</p>
+                        <p class="fade-in-up delay-3">你是我生命中最珍贵的存在，我希望能一直陪在你身边。</p>
+                    </div>
+                </div>
+                
+                <!-- 第四页 -->
+                <div class="page" data-page="3">
+                    <div class="page-indicator">第 4 页</div>
+                    <div class="page-content">
+                        <div class="heart fade-in-up"><i class="fas fa-gem"></i></div>
+                        <h1 class="fade-in-up delay-1">永恒的承诺 <span class="icon-after"><i class="fas fa-ring"></i></span></h1>
+                        <p class="fade-in-up delay-2">如果可以，我想和你一起走过春夏秋冬。</p>
+                        <p class="fade-in-up delay-3">看遍世间繁华，体验人生百态，和你一起慢慢变老。</p>
+                        <p class="fade-in-up delay-3">无论风雨，我都会守护在你身边，给你最温暖的怀抱。</p>
+                    </div>
+                </div>
+                
+                <!-- 第五页 -->
+                <div class="page" data-page="4">
+                    <div class="page-indicator">第 5 页</div>
+                    <div class="page-content">
+                        <div class="heart fade-in-up"><i class="fas fa-infinity"></i></div>
+                        <h1 class="fade-in-up delay-1">爱的告白 <span class="icon-after"><i class="fas fa-heart-circle-plus"></i></span></h1>
+                        <p class="fade-in-up delay-2">我不知道未来会怎样，但我知道，此刻我只想对你说：</p>
+                        <p class="fade-in-up delay-3 text-glow"><strong>我喜欢你，真的很喜欢你。</strong></p>
+                        <p class="fade-in-up delay-3">愿意给我一个机会，让我陪你走过未来的每一天吗？</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="nav-btn prev-btn" id="prevBtn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="nav-btn next-btn" id="nextBtn">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <audio id="bgm" autoplay loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        // 获取DOM元素
+        const envelopeContainer = document.getElementById('envelopeContainer');
+        const envelope = document.getElementById('envelope');
+        const letterContainer = document.getElementById('letterContainer');
+        const pagesContainer = document.getElementById('pagesContainer');
+        const pages = document.querySelectorAll('.page');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const floatingHeartsContainer = document.getElementById('floatingHearts');
+        
+        let currentPage = 0; // 当前页码，从0开始
+        const totalPages = 5; // 总共5页
+        let envelopeOpened = false; // 信封是否已打开
+        
+        // 信封点击事件
+        envelopeContainer.addEventListener('click', () => {
+            if (!envelopeOpened) {
+                // 添加动画类
+                envelope.classList.add('open');
+                envelopeContainer.classList.add('opening');
+                
+                // 延迟显示内容容器
+                setTimeout(() => {
+                    letterContainer.classList.add('show');
+                    // 初始化页面显示
+                    updatePageDisplay();
+                }, 800);
+                
+                envelopeOpened = true;
+            }
+        });
+        
+        // 更新页面显示
+        function updatePageDisplay() {
+            pages.forEach((page, index) => {
+                page.classList.remove('active', 'prev', 'next');
+                
+                if (index === currentPage) {
+                    page.classList.add('active');
+                } else if (index === currentPage - 1) {
+                    page.classList.add('prev');
+                } else if (index === currentPage + 1) {
+                    page.classList.add('next');
+                }
+            });
+        }
+        
+        // 下一页
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                updatePageDisplay();
+            }
+        }
+        
+        // 上一页
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                updatePageDisplay();
+            }
+        }
+        
+        // 绑定按钮事件
+        nextBtn.addEventListener('click', nextPage);
+        prevBtn.addEventListener('click', prevPage);
+        
+        // 键盘控制
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                nextPage();
+            } else if (event.key === 'ArrowLeft') {
+                prevPage();
+            }
+        });
+        
+        // 创建飘落效果
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = getRandomColor();
+            confetti.style.width = Math.random() * 10 + 5 + 'px';
+            confetti.style.height = confetti.style.width;
+            
+            document.body.appendChild(confetti);
+            
+            let pos = -10;
+            const fall = setInterval(() => {
+                pos += 1 + Math.random() * 2;
+                confetti.style.top = pos + 'px';
+                
+                if (pos > window.innerHeight) {
+                    clearInterval(fall);
+                    confetti.remove();
+                }
+            }, 20);
+        }
+        
+        // 创建浮动爱心
+        function createFloatingHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = '<i class="fas fa-heart"></i>';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.color = getRandomColor();
+            heart.style.animationDuration = (Math.random() * 4 + 4) + 's';
+            
+            floatingHeartsContainer.appendChild(heart);
+            
+            // 移除完成后的心动元素
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.parentNode.removeChild(heart);
+                }
+            }, 6000);
+        }
+        
+        // 创建闪烁星星
+        function createSparkle() {
+            const sparkle = document.createElement('div');
+            sparkle.classList.add('sparkle');
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.animationDelay = Math.random() * 2 + 's';
+            
+            pagesContainer.appendChild(sparkle);
+            
+            // 移除完成后的心动元素
+            setTimeout(() => {
+                if (sparkle.parentNode) {
+                    sparkle.parentNode.removeChild(sparkle);
+                }
+            }, 3000);
+        }
+        
+        function getRandomColor() {
+            const colors = ['#ff7eb3', '#ff65a3', '#ffc3e1', '#fffd8c', '#c3ff8c', '#8cd3ff', '#a188ff', '#ff88cc'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // 每100毫秒创建一个飘落物
+        setInterval(createConfetti, 100);
+        
+        // 每500毫秒创建一个浮动爱心
+        setInterval(createFloatingHeart, 500);
+        
+        // 每800毫秒创建一个闪烁星星
+        setInterval(createSparkle, 800);
+        
+        // 确保音频可以播放
+        window.addEventListener('click', function() {
+            const audio = document.getElementById('bgm');
+            if (audio.paused) {
+                audio.play();
+            }
+        });
+        
+        // 初始化Materialize组件
+        document.addEventListener('DOMContentLoaded', function() {
+            M.AutoInit();
+        });
+    </script>
+</body>
+</html>
